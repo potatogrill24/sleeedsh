@@ -14,7 +14,8 @@ pip install -r requirements.txt
 # deactivate
 ```
 
-2. Для настройки СУБД postgresql-17 введи следующие команды:
+2. Для настройки СУБД postgresql-16 введи следующие команды: (у меня хз чо с компьютером, но ставится максимум 16 постгрес, который по дефолту стоит на 5432 порте, в отличие от 17, как я понимаю.
+в любом случае при запуске кластера командой "sudo pg_ctlcluster 16 main start" стоит перед этим посмотреть его версию с помощью команды "pg_lsclusters")
 
 ```sh
 sudo apt-get install libpq-dev
@@ -32,7 +33,7 @@ CREATE DATABASE ecommerce OWNER ecommerce ENCODING 'UTF8';
 \q
 ```
 
-3. Установи резервную копию БД (при необходимости):
+3. Установи резервную копию БД (при необходимости): (Это мы не делаем, делаем сразу 4 шаг)
 
 ```sh
 pg_restore -U ecommerce -h localhost -p 5432 -d ecommerce -v ecommerce.dump
@@ -46,7 +47,7 @@ pg_dump -U postgres -h localhost -p 5432 -F c -b -v -f ecommerce.dump ecommerce
 ```
 
 
-4. Для входа в СУБД:
+4. Для входа в СУБД: (Вот на этом шаге стоит выполнить все скрипты для описания базы данных (они лежат в папке scripts в директории app), иначе просто не будет работать)
 
 ```sh
 sudo psql -U ecommerce -h localhost -p 5432 -d ecommerce
