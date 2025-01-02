@@ -1,0 +1,213 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    hostname: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_PORT}
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "${ZOOKEEPER_PORT}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - ${KAFKA_PORT}:${KAFKA_PORT}
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:${ZOOKEEPER_PORT}'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:${KAFKA_PORT},PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "${KAFKA_PORT}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  postgres:
+    build:
+      context: ..
+      dockerfile: deployments/postgres/Dockerfile
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT_INCREMENTED}:${POSTGRES_PORT}"
+    volumes:
+      - internet-shop-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "${REDIS_PORT_INCREMENTED}:${REDIS_PORT}"
+    volumes:
+      - internet-shop-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  init-postgres:
+    build:
+      context: ..
+      dockerfile: deployments/init_postgres/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: |
+      "
+      psql -h postgres -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /migrations/ddl.sql
+      psql -h postgres -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /migrations/dml.sql
+      psql -h postgres -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /migrations/dal.sql
+      "
+    
+  authorization:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        EXPOSE_PORT: "true"
+        PORT: ${AUTHORIZATION_PORT}
+        NAME: authorization
+    ports:
+      - "${AUTHORIZATION_PORT}:${AUTHORIZATION_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    init: true
+  
+  gateway:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        EXPOSE_PORT: "true"
+        PORT: ${GATEWAY_PORT}
+        NAME: gateway
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKER_SERV=kafka:${KAFKA_PORT}
+    init: true
+  
+  money_operations:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        NAME: money_operations
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy  
+    environment:
+      - KAFKA_BROKER_SERV=kafka:${KAFKA_PORT}
+    init: true
+
+  profile:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        EXPOSE_PORT: "true"
+        NAME: profile
+        PORT: ${PROFILE_PORT}
+    ports:
+      - "${PROFILE_PORT}:${PROFILE_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+
+  order_management:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        EXPOSE_PORT: "true"
+        NAME: order_management
+        PORT: ${ORDER_MANAGEMENT_PORT}
+    ports:
+      - "${ORDER_MANAGEMENT_PORT}:${ORDER_MANAGEMENT_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+
+  review_management:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        EXPOSE_PORT: "true"
+        NAME: review_management
+        PORT: ${REVIEW_MANAGEMENT_PORT}
+    ports:
+      - "${REVIEW_MANAGEMENT_PORT}:${REVIEW_MANAGEMENT_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+
+  search:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        EXPOSE_PORT: "true"
+        NAME: search
+        PORT: ${SEARCH_PORT}
+    ports:
+      - "${SEARCH_PORT}:${SEARCH_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+
+  recommendation_system:
+    build:
+      context: ..
+      dockerfile: deployments/python/Dockerfile
+      args:
+        EXPOSE_PORT: "true"
+        NAME: recommendation_system
+        PORT: ${RECOMMENDATION_SYSTEM_PORT}
+    ports:
+      - "${RECOMMENDATION_SYSTEM_PORT}:${RECOMMENDATION_SYSTEM_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+
+
+volumes:
+  internet-shop-data:
+  internet-shop-redis-data:

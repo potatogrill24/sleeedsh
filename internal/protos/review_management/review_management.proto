@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+message CreateReviewRequest {
+    int32 user_id = 1;
+    int32 product_id = 2;
+    float rate = 3;
+    string text = 4;
+}
+
+message DeleteReviewRequest {
+    int32 user_id = 1;
+    int32 product_id = 2;
+}
+
+message ReviewOperationResponse {
+    int32 status_code = 1;
+}
+
+service ReviewManagement {
+    rpc create_review (CreateReviewRequest) returns (ReviewOperationResponse);
+    rpc delete_review (DeleteReviewRequest) returns (ReviewOperationResponse);
+}
