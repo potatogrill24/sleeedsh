@@ -90,16 +90,16 @@ def create_review(jwt, product_id, rate, text):
         return None
 
 
-def delete_review(jwt, product_id):
-    headers = {"Authorization": f"Bearer {jwt}"}
-    data = {"product_id": product_id}
-    response = requests.delete(f"{API_URL}/api/review/delete", headers=headers, json=data)
-    if response.status_code == 200:
-        logger.info("Отзыв успешно удален")
-        return response.json()
-    else:
-        logger.error(f"Ошибка удаления отзыва: {response.status_code} - {response.text}")
-        return None
+# def delete_review(jwt, product_id):
+#     headers = {"Authorization": f"Bearer {jwt}"}
+#     data = {"product_id": product_id}
+#     response = requests.delete(f"{API_URL}/api/review/delete", headers=headers, json=data)
+#     if response.status_code == 200:
+#         logger.info("Отзыв успешно удален")
+#         return response.json()
+#     else:
+#         logger.error(f"Ошибка удаления отзыва: {response.status_code} - {response.text}")
+#         return None
 
 
 def recommendations(jwt, count):
@@ -148,16 +148,67 @@ def buy_page(jwt):
         st.success("Покупка завершена")
 
 
-def review_page(jwt, product_id):
+def review_page(jwt, product_id): 
     st.title("Управление отзывами")
-    rate = st.slider("Оценка", 0.0, 5.0)
-    text = st.text_area("Текст отзыва")
-    if st.button("Создать отзыв"):
-        create_review(jwt, product_id, rate, text)
-        st.success("Отзыв создан")
-    if st.button("Удалить отзыв"):
-        delete_review(jwt, product_id)
-        st.success("Отзыв удален")
+
+    # Проверяем, есть ли состояние для оценки и текста
+    if f"rate_{product_id}" not in st.session_state:
+        st.session_state[f"rate_{product_id}"] = 0.0
+    if f"text_{product_id}" not in st.session_state:
+        st.session_state[f"text_{product_id}"] = ""
+
+    # Слайдер для оценки
+    rate = st.slider(
+        "Оценка",
+        0.0,
+        5.0,
+        st.session_state[f"rate_{product_id}"],
+        step=0.1,
+        key=f"rate_slider_{product_id}"
+    )
+
+    # Текстовое поле для отзыва
+    text = st.text_area(
+        "Текст отзыва",
+        st.session_state[f"text_{product_id}"],
+        key=f"text_area_{product_id}"
+    )
+
+    # Кнопка для создания отзыва
+    if st.button("Создать отзыв", key=f"create_review_{product_id}"):
+        response = create_review(jwt, product_id, rate, text)
+        if response:
+            st.success("Отзыв создан")
+            # Очистка состояния отзыва
+            st.session_state[f"rate_{product_id}"] = 0.0
+            st.session_state[f"text_{product_id}"] = ""
+            # Сбрасываем состояние выбора продукта для отзыва
+            if 'review_product_id' in st.session_state:
+                del st.session_state['review_product_id']
+
+    # # Кнопка для удаления отзыва
+    # if st.button("Удалить отзыв", key=f"delete_review_{product_id}"):
+    #     response = delete_review(jwt, product_id)
+    #     if response:
+    #         st.success("Отзыв удален")
+    #         # Очистка состояния отзыва
+    #         st.session_state[f"rate_{product_id}"] = 0.0
+    #         st.session_state[f"text_{product_id}"] = ""
+    #         # Сбрасываем состояние выбора продукта для отзыва
+    #         if 'review_product_id' in st.session_state:
+    #             del st.session_state['review_product_id']
+
+    # Кнопка закрытия панели
+    if st.button("Закрыть панель отзыва", key=f"close_review_{product_id}"):
+        # Очистка состояния
+        st.session_state[f"rate_{product_id}"] = 0.0
+        st.session_state[f"text_{product_id}"] = ""
+        # Сбрасываем состояние выбора продукта для отзыва
+        if 'review_product_id' in st.session_state:
+            del st.session_state['review_product_id']
+        st.rerun()  # Перезагрузка страницы, чтобы закрыть текущую панель
+
+
 
 
 def login_page():
@@ -181,7 +232,7 @@ def profile_page_user_self(jwt):
     st.subheader(f"Корзина - {profile['total_cart_price']}")
     cart = profile['cart']
     for product in cart:
-        st.write(f"{product['name'] - product['price']}")
+        st.write(f"{product['name']} - {product['price']}")
 
     st.subheader(f"Чеки")
     checks = profile['paychecks']
@@ -192,8 +243,14 @@ def profile_page_user_self(jwt):
         products = check['products']
         for product in products:
             st.write(f"{product['name']} - {product['price']}")
-            if st.button("Оставить отзыв", key=f"{product['id']}_{profile['data']['id']}_review"):
-                review_page(jwt, product['id'])
+            if st.button("Оставить отзыв", key=f"{product['id']}_review_button"):
+                # Устанавливаем состояние для отзыва
+                st.session_state['review_product_id'] = product['id']
+
+    # Если установлен продукт для отзыва, вызываем review_page
+    if 'review_product_id' in st.session_state:
+        review_page(jwt, st.session_state['review_product_id'])
+
 
 
     st.subheader(f"Отзывы")
