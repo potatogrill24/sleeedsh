@@ -1,7 +1,7 @@
--- INSERT INTO public.users (name, login, balance) VALUES
---     ('abcda', 'abcda', 11);
--- INSERT INTO public.user_credentials (user_id, password_hash) VALUES
---     (1, '$2b$12$JKwzZeUNNeffTr2ws72QdeojNSPmd/fdML3A/rhiJZssERkecw.9m');
+INSERT INTO public.users (name, login, balance) VALUES
+    ('abcda', 'abcda', 11);
+INSERT INTO public.user_credentials (user_id, password_hash) VALUES
+    (1, '$2b$12$JKwzZeUNNeffTr2ws72QdeojNSPmd/fdML3A/rhiJZssERkecw.9m');
     
 INSERT INTO public.shops (name, login) VALUES ('!Якутск Орджоникидзе, 56 фран', 'yakutsk_ordzhonikidze_56_fran_0');
 INSERT INTO public.shop_credentials (shop_id, password_hash) VALUES (1, '$2b$12$JKwzZeUNNeffTr2ws72QdeojNSPmd/fdML3A/rhiJZssERkecw.9m');

@@ -89,7 +89,7 @@ class RecommendationSystem:
         recommendations.sort(key=lambda x: x[1], reverse=True)
 
         # Если рекомендаций недостаточно, добавляем популярные товары
-        if len(recommendations) < 4:
+        if len(recommendations) < 7:
             popular_items = self.data[
                 (self.data['rating'] >= 4) &
                 (~self.data['item_id'].isin([rec[0] for rec in recommendations]))

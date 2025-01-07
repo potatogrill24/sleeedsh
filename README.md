@@ -13,7 +13,7 @@ make down # останавливает и удаляет контейнер в �
 
 ```bash
 python3 -m venv venv
-source/venv/bin/activate
+source venv/bin/activate
 streamlit run web/main.py
 ```
 
@@ -22,6 +22,18 @@ streamlit run web/main.py
 ```bash
 pip install (some_packet) # например, streamlit, psycopg2 или surprise
 deactivate 
-source/venv/bin/activate
+source venv/bin/activate
 streamlit run web/main.py # перезапуск окружения и повторный запуск веб-приложения
 ```
+
+
+
+### ЕСЛИ НЕ ЗАПУСКАЕТСЯ СТРИМЛИТ ИЗ-ЗА НАМПАЯ
+
+```bash
+pip uninstall numpy
+pip install "numpy<2"
+pip show numpy
+```
+
+
