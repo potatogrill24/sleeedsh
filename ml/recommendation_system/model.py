@@ -53,7 +53,7 @@ class RecommendationSystem:
         """
         # Находим товары, которые пользователь оценил высоко
         user_ratings = self.data[self.data['user_id'] == user_id]
-        high_rated_items = user_ratings[user_ratings['rating'] >= 3.5]  # Снижаем порог рейтинга
+        high_rated_items = user_ratings[user_ratings['rating'] >= 4] 
 
         # Проверяем, есть ли данные для рекомендаций
         if high_rated_items.empty:

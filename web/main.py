@@ -129,7 +129,8 @@ def login_page():
     st.title("Авторизуйтесь или зарегистрируйтесь")
     tab_login, tab_register = st.tabs(["Вход", "Регистрация"])
     with tab_login:
-        role = st.selectbox("Выберите роль", ["user", "shop"], key="login_role")
+        # role = st.selectbox("Выберите роль", ["user", "shop"], key="login_role")
+        role = "user"
         username = st.text_input("Логин", key="login")
         password = st.text_input("Пароль", type="password", key="login_password")
         if st.button("Войти"):

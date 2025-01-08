@@ -192,22 +192,6 @@ services:
         condition: service_healthy
     init: true
 
-  recommendation_system:
-    build:
-      context: ..
-      dockerfile: deployments/python/Dockerfile
-      args:
-        EXPOSE_PORT: "true"
-        NAME: recommendation_system
-        PORT: ${RECOMMENDATION_SYSTEM_PORT}
-    ports:
-      - "${RECOMMENDATION_SYSTEM_PORT}:${RECOMMENDATION_SYSTEM_PORT}"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    init: true
-
-
 volumes:
   internet-shop-data:
   internet-shop-redis-data:
