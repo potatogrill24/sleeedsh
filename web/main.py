@@ -541,28 +541,28 @@ def profile_page_user(jwt):
         st.write(f"{review['product_name']} - {review['rate']}")
         st.write(f"{review['text']}")
 
-def profile_page_shop(jwt):
-    profile = self_profile(jwt)
-    st.title(profile['data']['name'])
-    st.subheader(f"Роль: магазин")
-    st.subheader(f"Продукты")
-    if st.button("Добавить продукт"):
-        st.rerun()
-    products=profile['products']
-    i = 0
-    for product in products:
-        st.write(f"Название - {product['product_name']}")
-        # st.write(f"Категория - {product['cat_name']}")
-        st.write(f"Цена - {product['product_price']}")
-        # st.write(f"Продажи - {product['sales']}")
-        # st.write(f"Количество оценок - {product['review_count']}")
-        # st.write(f"Средняя оценка - {product['review_avg']}")
-        i+=1
-        if st.button("Удалить продукт", key=f"{product['product_name']} - {i}"):
-            st.rerun()
-    if st.button("Выйти из аккаунта"):
-        logout(jwt)
-        st.rerun()
+# def profile_page_shop(jwt):
+#     profile = self_profile(jwt)
+#     st.title(profile['data']['name'])
+#     st.subheader(f"Роль: магазин")
+#     st.subheader(f"Продукты")
+#     if st.button("Добавить продукт"):
+#         st.rerun()
+#     products=profile['products']
+#     i = 0
+#     for product in products:
+#         st.write(f"Название - {product['product_name']}")
+#         # st.write(f"Категория - {product['cat_name']}")
+#         st.write(f"Цена - {product['product_price']}")
+#         # st.write(f"Продажи - {product['sales']}")
+#         # st.write(f"Количество оценок - {product['review_count']}")
+#         # st.write(f"Средняя оценка - {product['review_avg']}")
+#         i+=1
+#         if st.button("Удалить продукт", key=f"{product['product_name']} - {i}"):
+#             st.rerun()
+#     if st.button("Выйти из аккаунта"):
+#         logout(jwt)
+#         st.rerun()
 
 
 if 'logged_in' not in st.session_state:
